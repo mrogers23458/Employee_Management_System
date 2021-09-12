@@ -24,9 +24,10 @@ const initPrompt = [{
 }]
 
 const departmentPrompt = [{
-    type: "input",
+    type: "list",
     name: "depName",
-    message: "What is the name of the department?"
+    message: "What is the name of the department?",
+    choices: ['Service', 'Sales', 'Engineering', 'Legal', 'Finance']
 }]
 
 const rolePrompt = [{
@@ -68,28 +69,80 @@ const updatePrompt = [{
     choices: empDbQuery
 }]
 
+const deptQuery = async() => {
+    const res = await iq.prompt(departmentPrompt)
+    console.log(res.depName)
+    db.query(`INSERT INTO department (name) VALUES ("${res.depName}")`)
+    init();
+    
+}
+
+const roleQuery = async() => {
+    const res = await iq.prompt(rolePrompt)
+    console.log(res.roleName)
+    console.log(res.salary)
+    console.log(res.depRole)
+
+}
+
+const empQuery = async() => {
+    const res = await iq.prompt(employeePrompt)
+    console.log(res.empfName)
+    console.log(res.emplName)
+    console.log(res.empRole)
+    console.log(res.empMan)
+
+}
+
+const updateQuery = async () => {
+    const res = await iq.prompt(updatePrompt)
+    console.log(res.update)
+}
 const init = async() => {
     const res = await iq.prompt(initPrompt)
     console.log(initPrompt);
-
+//runs a query to employees_db and returns all information from table department
     if (res.initAction === 'view all departments'){
         console.log('view all departments')
         db.query('SELECT * FROM department', function (err, results){
             console.log(results)
         })
     }
+//runs a query to employees_db and returns all information from table role
     if (res.initAction === 'view all roles'){
         console.log('view all departments')
         db.query('SELECT * FROM role', function (err, results){
             console.log(results)
         })
     }
+//runs a query to employees_db and returns all information from table employee
     if (res.initAction === 'view all employees'){
         console.log('view all departments')
         db.query('SELECT * FROM employee', function (err, results){
             console.log(results)
         })
     }
+//runs function to query database with an insertion into table department
+    if (res.initAction === 'add a department'){
+        console.log('running department prompt...')
+        deptQuery();
+    }
+//runs function to query database with an insertion into table role
+    if (res.initAction === 'add a role'){
+        console.log('running role prompt...')
+        roleQuery();
+    }
+//runs function to query database with an insertion into table employee
+    if (res.initAction === 'add an employee'){
+        console.log('running employee prompt...')
+        empQuery();
+    }
+//runs function to query database with a SET WHERE update FROM table employee
+    if (res.initAction === 'update an employee role'){
+        console.log('running update prompt...')
+        updateQuery();
+    }
+
 }
 
 init();
