@@ -74,7 +74,7 @@ const updatePrompt = [{
 const deptQuery = async() => {
     const res = await iq.prompt(departmentPrompt)
     console.log(res.depName)
-    db.query(`INSERT INTO department (name) VALUES ("${res.depName}")`)
+    db.query(`INSERT INTO department (department_name) VALUES ("${res.depName}")`)
     init();
     
 }
@@ -107,6 +107,8 @@ const roleQuery = async() => {
         console.log('data added to table role')
     }
 
+    init();
+
 }
 
 const empQuery = async() => {
@@ -137,7 +139,7 @@ const init = async() => {
 //runs a query to employees_db and returns all information from table role
     if (res.initAction === 'view all roles'){
         console.log('view all departments')
-        db.query('SELECT * FROM role JOIN department ON role.department_id = department.id ', function (err, results){
+        db.query('SELECT role.id, role.title, role.salary FROM role JOIN department ON role.department_id = department.id ', function (err, results){
             console.log(results)
             console.table(results)
             init();
