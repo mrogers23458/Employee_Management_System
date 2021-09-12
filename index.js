@@ -83,6 +83,20 @@ const roleQuery = async() => {
     console.log(res.salary)
     console.log(res.depRole)
 
+    if (res.depRole === 'Service'){
+        db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", ${res.salary}, 1)`)
+
+        console.log('data added to table role')
+    } else if (res.depRole === 'Sales'){
+
+    } else if (res.depRole === 'Engineering'){
+
+    } else if (res.depRole === 'Legal'){
+        
+    } else if (res.depRole === 'Finance'){
+
+    }
+
 }
 
 const empQuery = async() => {
@@ -111,7 +125,7 @@ const init = async() => {
 //runs a query to employees_db and returns all information from table role
     if (res.initAction === 'view all roles'){
         console.log('view all departments')
-        db.query('SELECT * FROM role', function (err, results){
+        db.query('SELECT * FROM role JOIN department ON role.department_id = department.id ', function (err, results){
             console.log(results)
         })
     }
