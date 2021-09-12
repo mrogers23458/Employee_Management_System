@@ -1,6 +1,8 @@
 const iq = require('inquirer')
-const mysql = require('mysql2')
+const mysql = require('mysql2');
+const { exit } = require('process');
 const pass = require('../../pass/pass')
+const cTable = require('console.table')
 
 const db = mysql.createConnection(
     {
@@ -20,7 +22,7 @@ const initPrompt = [{
     type: "list",
     name: "initAction",
     message: "what would you like to do?",
-    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee role']
+    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee role', 'exit application']
 }]
 
 const departmentPrompt = [{
@@ -88,13 +90,21 @@ const roleQuery = async() => {
 
         console.log('data added to table role')
     } else if (res.depRole === 'Sales'){
+        db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", ${res.salary}, 2)`)
 
+        console.log('data added to table role')
     } else if (res.depRole === 'Engineering'){
+        db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", ${res.salary}, 3)`)
 
+        console.log('data added to table role')
     } else if (res.depRole === 'Legal'){
-        
-    } else if (res.depRole === 'Finance'){
+        db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", ${res.salary}, 4)`)
 
+        console.log('data added to table role')
+    } else if (res.depRole === 'Finance'){
+        db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", ${res.salary}, 5)`)
+
+        console.log('data added to table role')
     }
 
 }
@@ -120,6 +130,8 @@ const init = async() => {
         console.log('view all departments')
         db.query('SELECT * FROM department', function (err, results){
             console.log(results)
+            console.table(results)
+            init();
         })
     }
 //runs a query to employees_db and returns all information from table role
@@ -127,6 +139,8 @@ const init = async() => {
         console.log('view all departments')
         db.query('SELECT * FROM role JOIN department ON role.department_id = department.id ', function (err, results){
             console.log(results)
+            console.table(results)
+            init();
         })
     }
 //runs a query to employees_db and returns all information from table employee
@@ -156,7 +170,10 @@ const init = async() => {
         console.log('running update prompt...')
         updateQuery();
     }
-
+    if (res.initAction === 'exit application'){
+        return exit()
+    }
+    return
 }
 
 init();
