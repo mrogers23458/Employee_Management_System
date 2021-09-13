@@ -18,6 +18,8 @@ const empDbQuery = function () {
     let test = []
     test.push('one', 'two', 'three')
 
+    db.query('SELECT CONCAT (employee.first_name, " ", employee.last_name) as name FROM employee;')
+
     return test
 }
 
@@ -64,7 +66,7 @@ const employeePrompt = [{
 const deptQuery = async() => {
     const res = await iq.prompt(departmentPrompt)
     console.log(res.depName)
-    db.query(`INSERT INTO department (department_name) VALUES ("${res.depName}")`)
+    db.query(`INSERT INTO department (name) VALUES ("${res.depName}")`)
     init();
     
 }
@@ -94,13 +96,47 @@ const roleQuery = async(data) => {
     })
 }
 
-const empQuery = async() => {
-    const res = await iq.prompt(employeePrompt)
-    console.log(res.empfName)
-    console.log(res.emplName)
-    console.log(res.empRole)
-    console.log(res.empMan)
+const empQuery = async(data, data2) => {
+    console.log('----------------------DATA')
+    console.log(data)
+    console.log('DATA2-----------------------------------')
+    console.log(data2)
+    const res = await iq.prompt([{
+        type: "input",
+        name: "empfName",
+        message: "What is the employee's first name?"
+    },{
+        type: "input",
+        name: "emplName",
+        message: "What is the employee's last name?" 
+    },{
+        type: "list",
+        name: "empRole",
+        message: "What is the employee's role?",
+        choices: data2
+        
+    },{
+        type: "list",
+        name: "empMan",
+        message: "Who is the employee's manager?",
+        choices: data
+    }])
 
+    var hasManager = data.find(element => {
+        return element.name === res.empMan
+    })
+    console.log(hasManager.id)
+
+    var hasRole = data2.find(el => {
+        console.log('element below------')
+        console.log(el)
+        return el.name === res.empRole
+    })
+    console.log(hasRole.id)
+
+    db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${res.empfName}", "${res.emplName}", ${hasRole.id}, ${hasManager.id})`, function (err, res) {
+        init()
+    })
 }
 
 const updateQuery = async (data) => {
@@ -137,7 +173,7 @@ const init = async() => {
 //runs a query to employees_db and returns all information from table employee
     if (res.initAction === 'view all employees'){
         console.log('view all departments')
-        db.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.department_name, CONCAT(Manager.first_name, " ", Manager.last_name) as manager FROM employee JOIN role ON employee.role_id = role.id JOIN department ON department.id = role.department_id LEFT JOIN employee as Manager ON employee.manager_id = Manager.id', function (err, results){
+        db.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(Manager.first_name, " ", Manager.last_name) as manager FROM employee JOIN role ON employee.role_id = role.id JOIN department ON department.id = role.department_id LEFT JOIN employee as Manager ON employee.manager_id = Manager.id', function (err, results){
             console.log(results)
             console.table(results)
             init();
@@ -159,7 +195,13 @@ const init = async() => {
 //runs function to query database with an insertion into table employee
     if (res.initAction === 'add an employee'){
         console.log('running employee prompt...')
-        empQuery();
+        db.query('SELECT CONCAT (employee.first_name, " ", employee.last_name) as name, employee.id FROM employee WHERE manager_id IS NULL' , function (err, res) {
+            db.query('SELECT title as name, id FROM role', function(err, res2){
+                empQuery(res, res2)
+            })
+            
+        })
+        
     }
 //runs function to query database with a SET WHERE update FROM table employee
     if (res.initAction === 'update an employee role'){
