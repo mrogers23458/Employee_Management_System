@@ -14,22 +14,6 @@ const db = mysql.createConnection(
     console.log('Connected to the employees_db database')
 );
 
-const empDbQuery = function () {
-    let test = []
-    test.push('one', 'two', 'three')
-
-    db.query('SELECT CONCAT (employee.first_name, " ", employee.last_name) as name FROM employee;')
-
-    return test
-}
-
-const newQuery = function (){
-    db.query('SELECT * FROM department', function (err, results){
-        console.log(results)
-        console.table(results)
-    })
-}
-
 const initPrompt = [{
     type: "list",
     name: "initAction",
@@ -42,26 +26,6 @@ const departmentPrompt = [{
     name: "depName",
     message: "What is the name of the department?",
 }]
-
-
-const employeePrompt = [{
-    type: "input",
-    name: "empfName",
-    message: "What is the employee's first name?"
-},{
-    type: "input",
-    name: "emplName",
-    message: "What is the employee's last name?" 
-},{
-    type: "input",
-    name: "empRole",
-    message: "What is the employee's role?"
-},{
-    type: "input",
-    name: "empMan",
-    message: "Who is the employee's manager?"
-}]
-
 
 const deptQuery = async() => {
     const res = await iq.prompt(departmentPrompt)
@@ -97,10 +61,6 @@ const roleQuery = async(data) => {
 }
 
 const empQuery = async(data, data2) => {
-    console.log('----------------------DATA')
-    console.log(data)
-    console.log('DATA2-----------------------------------')
-    console.log(data2)
     const res = await iq.prompt([{
         type: "input",
         name: "empfName",
@@ -128,27 +88,73 @@ const empQuery = async(data, data2) => {
     console.log(hasManager.id)
 
     var hasRole = data2.find(el => {
-        console.log('element below------')
-        console.log(el)
         return el.name === res.empRole
     })
-    console.log(hasRole.id)
-
     db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${res.empfName}", "${res.emplName}", ${hasRole.id}, ${hasManager.id})`, function (err, res) {
         init()
     })
 }
 
-const updateQuery = async (data) => {
-   const res = await iq.prompt({
+const updateQuery = async (data, data2) => {
+    console.log('---------------------data below')
+    console.log(data)
+
+    console.log('------------------------data2 below')
+    console.log(data2)
+    
+  
+   const res = await iq.prompt([{
         type: 'list',
         name: 'updateEmp',
         message: 'Which employee would you like to update?',
         choices: data
-    })
-    console.log(data)
+    },{
+      type: 'list',
+      name:'updateEmpRole',
+      message: "What is the employee's new role?",
+      choices: data2
+      
+    }])
+    console.log('first questions answers here')
     console.log(res.updateEmp)
+
+    console.log('second question answers here')
+    console.log(res.updateEmpRole)
+
+    const empEl = data.find(el => {
+        return el.name === res.updateEmp 
+    })
+
+    const empElID = empEl.id
+    console.log(empElID)
+    console.log('emp el here')
+    console.log(empEl)
+
+    const roleEl = data2.find(el => {
+        return el.name === res.updateEmpRole
+    })
+    console.log('role el here')
+    console.log(roleEl)
+
+    const roleElID = roleEl.id
+    console.log(roleElID)
+
+    const sql = `UPDATE employee SET role_id = ? WHERE id = ?`
+    const params = [roleElID, empElID]
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            console.error(err)
+        } else {
+            console.log(result)
+            init();
+        }
+    })
+
+   
 }
+
+
+
 const init = async() => {
     const res = await iq.prompt(initPrompt)
     console.log(initPrompt);
@@ -206,8 +212,14 @@ const init = async() => {
 //runs function to query database with a SET WHERE update FROM table employee
     if (res.initAction === 'update an employee role'){
         console.log('running update prompt...')
-        db.query('SELECT employee.first_name as name FROM employee', function (err, res) {
-            updateQuery(res)
+        db.query('SELECT CONCAT(employee.first_name, " ", employee.last_name) as name, manager_id, role_id, id FROM employee', function (err, empRes) {
+            db.query('SELECT title as name, id FROM role', function(err, roleRes) {
+                if (err)  {
+                    console.error(err)
+                }
+                updateQuery(empRes, roleRes)
+            })
+            
         })
     }
     if (res.initAction === 'exit application'){
