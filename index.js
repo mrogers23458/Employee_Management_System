@@ -29,7 +29,6 @@ const departmentPrompt = [{
 
 const deptQuery = async() => {
     const res = await iq.prompt(departmentPrompt)
-    console.log(res.depName)
     db.query(`INSERT INTO department (name) VALUES ("${res.depName}")`)
     init();
     
@@ -53,8 +52,6 @@ const roleQuery = async(data) => {
     var roleID = data.find(element => {
         return element.name === res.depRole
     })
-    console.log(roleID)
-    console.log(res.depRole)
     db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${res.roleName}", "${res.salary}", ${roleID.id})`, function (err, res) {
         init()
     })
@@ -85,7 +82,6 @@ const empQuery = async(data, data2) => {
     var hasManager = data.find(element => {
         return element.name === res.empMan
     })
-    console.log(hasManager.id)
 
     var hasRole = data2.find(el => {
         return el.name === res.empRole
@@ -96,13 +92,7 @@ const empQuery = async(data, data2) => {
 }
 
 const updateQuery = async (data, data2) => {
-    console.log('---------------------data below')
-    console.log(data)
 
-    console.log('------------------------data2 below')
-    console.log(data2)
-    
-  
    const res = await iq.prompt([{
         type: 'list',
         name: 'updateEmp',
@@ -115,29 +105,18 @@ const updateQuery = async (data, data2) => {
       choices: data2
       
     }])
-    console.log('first questions answers here')
-    console.log(res.updateEmp)
-
-    console.log('second question answers here')
-    console.log(res.updateEmpRole)
 
     const empEl = data.find(el => {
         return el.name === res.updateEmp 
     })
 
     const empElID = empEl.id
-    console.log(empElID)
-    console.log('emp el here')
-    console.log(empEl)
 
     const roleEl = data2.find(el => {
         return el.name === res.updateEmpRole
     })
-    console.log('role el here')
-    console.log(roleEl)
 
     const roleElID = roleEl.id
-    console.log(roleElID)
 
     const sql = `UPDATE employee SET role_id = ? WHERE id = ?`
     const params = [roleElID, empElID]
@@ -145,7 +124,6 @@ const updateQuery = async (data, data2) => {
         if (err) {
             console.error(err)
         } else {
-            console.log(result)
             init();
         }
     })
@@ -157,30 +135,24 @@ const updateQuery = async (data, data2) => {
 
 const init = async() => {
     const res = await iq.prompt(initPrompt)
-    console.log(initPrompt);
 //runs a query to employees_db and returns all information from table department
     if (res.initAction === 'view all departments'){
-        console.log('view all departments')
         db.query('SELECT * FROM department', function (err, results){
-            console.log(results)
+
             console.table(results)
             init();
         })
     }
 //runs a query to employees_db and returns all information from table role
     if (res.initAction === 'view all roles'){
-        console.log('view all departments')
         db.query('SELECT role.id, role.title, role.salary FROM role LEFT JOIN department ON role.department_id = department.id ', function (err, results){
-            console.log(results)
             console.table(results)
             init();
         })
     }
 //runs a query to employees_db and returns all information from table employee
     if (res.initAction === 'view all employees'){
-        console.log('view all departments')
         db.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(Manager.first_name, " ", Manager.last_name) as manager FROM employee JOIN role ON employee.role_id = role.id JOIN department ON department.id = role.department_id LEFT JOIN employee as Manager ON employee.manager_id = Manager.id', function (err, results){
-            console.log(results)
             console.table(results)
             init();
         })
